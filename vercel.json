@@ -1,4 +1,5 @@
 {
+  "outputDirectory": ".",
   "rewrites": [
     { "source": "/analyze-image", "destination": "/api/main" },
     { "source": "/health", "destination": "/api/main" },
