@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShelfSense AI – Smarter Retail Monitoring</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ═══════════════════════════════════════
+       LANDING PAGE
+    ═══════════════════════════════════════ */
+    #landing {
+      position: fixed; inset: 0;
+      background: #ffffff;
+      z-index: 9999; overflow-y: auto;
+      transition: opacity 0.6s ease, transform 0.6s ease;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #0f172a;
+    }
+    #landing.hide { opacity: 0; transform: scale(1.04); pointer-events: none; }
+
+    :root {
+      --lp-primary: #06b6d4;
+      --lp-secondary: #8b5cf6;
+      --lp-dark: #0f172a;
+      --lp-gray: #64748b;
+    }
+
+    /* Navbar */
+    .lp-navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      padding: 1.5rem 2rem;
+      background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(15,23,42,0.1); transition: all 0.3s ease;
+    }
+    .lp-navbar.scrolled { padding: 1rem 2rem; background: rgba(255,255,255,0.95); box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+    .lp-navbar-content { max-width: 1400px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+    .lp-logo { display: flex; align-items: center; gap: 0.75rem; }
+    .lp-logo-icon { width: 44px; height: 44px; border-radius: 10px; overflow: hidden; border: 2px solid var(--lp-primary); box-shadow: 0 0 16px rgba(6,182,212,0.25); flex-shrink: 0; }
+    .lp-logo-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .lp-logo-text-wrap { display: flex; flex-direction: column; }
+    .lp-logo-text { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700; line-height: 1; }
+    .lp-logo-shelf { color: var(--lp-dark); }
+    .lp-logo-sense { color: var(--lp-primary); }
+    .lp-logo-subtitle { color: var(--lp-gray); font-size: 0.8rem; font-weight: 400; margin-top: 2px; }
+    .lp-navbar-right { display: flex; align-items: center; gap: 1.5rem; }
+    .lp-nav-links { display: flex; gap: 2rem; list-style: none; }
+    .lp-nav-links a { color: var(--lp-dark); text-decoration: none; font-weight: 500; transition: color 0.3s ease; position: relative; }
+    .lp-nav-links a::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px; background: var(--lp-primary); transition: width 0.3s ease; }
+    .lp-nav-links a:hover { color: var(--lp-primary); }
+    .lp-nav-links a:hover::after { width: 100%; }
+    .lp-nexora-logo { height: 28px; width: auto; display: block; }
+
+    /* Hero */
+    .lp-hero { min-height: 100vh; background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%); position: relative; overflow: hidden; display: flex; align-items: center; padding-top: 80px; }
+    .lp-hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 20% 50%, rgba(6,182,212,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(139,92,246,0.15) 0%, transparent 50%); }
+    .lp-grid-pattern { position: absolute; inset: 0; background-image: linear-gradient(rgba(6,182,212,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(6,182,212,0.05) 1px, transparent 1px); background-size: 50px 50px; mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent); }
+    .lp-hero-content { max-width: 1400px; margin: 0 auto; padding: 4rem 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; position: relative; z-index: 1; }
+    .lp-hero-text { color: white; }
+    .lp-hero-badge { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1.25rem; background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.3); border-radius: 50px; color: var(--lp-primary); font-size: 0.875rem; font-weight: 600; margin-bottom: 2rem; animation: lp-fadeInUp 0.6s ease-out; }
+    .lp-badge-dot { width: 8px; height: 8px; background: var(--lp-primary); border-radius: 50%; animation: lp-pulse 2s infinite; }
+    @keyframes lp-pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    .lp-hero h1 { font-family: 'Space Grotesk', sans-serif; font-size: 4.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; background: linear-gradient(135deg, #ffffff 0%, #06b6d4 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: lp-fadeInUp 0.6s ease-out 0.2s both; }
+    .lp-hero .lp-subtitle { font-size: 1.35rem; line-height: 1.7; color: #cbd5e1; margin-bottom: 2.5rem; max-width: 600px; animation: lp-fadeInUp 0.6s ease-out 0.4s both; }
+    @keyframes lp-fadeInUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+    .lp-hero-buttons { display: flex; gap: 1rem; animation: lp-fadeInUp 0.6s ease-out 0.6s both; }
+    .lp-btn { padding: 1rem 2rem; border-radius: 12px; font-weight: 600; font-size: 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; border: none; cursor: pointer; }
+    .lp-btn-primary { background: linear-gradient(135deg, var(--lp-primary) 0%, var(--lp-secondary) 100%); color: white; box-shadow: 0 10px 30px rgba(6,182,212,0.3); }
+    .lp-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 15px 40px rgba(6,182,212,0.4); }
+    .lp-btn-secondary { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px); }
+    .lp-btn-secondary:hover { background: rgba(255,255,255,0.15); }
+    .lp-hero-image { position: relative; animation: lp-fadeInUp 0.6s ease-out 0.4s both; }
+    .lp-hero-image-main { width: 100%; height: 500px; border-radius: 24px; object-fit: cover; box-shadow: 0 20px 60px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); }
+    .lp-floating-card { position: absolute; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-radius: 16px; padding: 1.5rem; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: lp-float 3s ease-in-out infinite; }
+    @keyframes lp-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)} }
+    .lp-floating-card-1 { top: -20px; right: -20px; }
+    .lp-floating-card-2 { bottom: -20px; left: -20px; animation-delay: 1s; }
+    .lp-card-stat { font-size: 2rem; font-weight: 800; color: var(--lp-primary); display: block; }
+    .lp-card-label { font-size: 0.875rem; color: var(--lp-gray); font-weight: 500; }
+
+    /* Shared section */
+    .lp-section { padding: 8rem 2rem; max-width: 1400px; margin: 0 auto; }
+    .lp-section-header { text-align: center; max-width: 800px; margin: 0 auto 5rem; }
+    .lp-section-badge { display: inline-block; padding: 0.5rem 1.25rem; background: linear-gradient(135deg, rgba(6,182,212,0.1) 0%, rgba(139,92,246,0.1) 100%); border: 1px solid rgba(6,182,212,0.2); border-radius: 50px; color: var(--lp-primary); font-size: 0.875rem; font-weight: 600; margin-bottom: 1rem; }
+    .lp-section-title { font-family: 'Space Grotesk', sans-serif; font-size: 3.5rem; font-weight: 800; margin-bottom: 1.5rem; background: linear-gradient(135deg, var(--lp-dark) 0%, var(--lp-primary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .lp-section-description { font-size: 1.25rem; color: var(--lp-gray); line-height: 1.8; }
+
+    /* Overview */
+    .lp-overview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-top: 4rem; }
+    .lp-overview-content { background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%); padding: 3rem; border-radius: 24px; border: 1px solid rgba(6,182,212,0.1); }
+    .lp-overview-content h3 { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; font-weight: 700; color: var(--lp-dark); margin-bottom: 1.5rem; }
+    .lp-overview-content p { font-size: 1.1rem; line-height: 1.8; color: var(--lp-gray); margin-bottom: 1.25rem; }
+    .lp-overview-image { border-radius: 24px; overflow: hidden; height: 500px; }
+    .lp-overview-image img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* Features */
+    .lp-features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 4rem; }
+    .lp-feature-card { background: white; border-radius: 24px; padding: 2.5rem; border: 1px solid #e2e8f0; transition: all 0.4s cubic-bezier(0.4,0,0.2,1); position: relative; overflow: hidden; }
+    .lp-feature-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--lp-primary), var(--lp-secondary)); transform: scaleX(0); transition: transform 0.4s ease; }
+    .lp-feature-card:hover { transform: translateY(-8px); box-shadow: 0 20px 60px rgba(6,182,212,0.15); border-color: var(--lp-primary); }
+    .lp-feature-card:hover::before { transform: scaleX(1); }
+    .lp-feature-icon { width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, var(--lp-primary) 0%, var(--lp-secondary) 100%); display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; transition: transform 0.3s ease; }
+    .lp-feature-card:hover .lp-feature-icon { transform: scale(1.1) rotate(5deg); }
+    .lp-feature-icon svg { width: 32px; height: 32px; stroke: white; stroke-width: 2; fill: none; }
+    .lp-feature-card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--lp-dark); margin-bottom: 1rem; }
+    .lp-feature-card p { font-size: 1.05rem; line-height: 1.7; color: var(--lp-gray); }
+
+    /* Tech */
+    .lp-tech-section { background: var(--lp-dark); color: white; padding: 8rem 2rem; position: relative; overflow: hidden; }
+    .lp-tech-section::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 80% 20%, rgba(6,182,212,0.1) 0%, transparent 50%), radial-gradient(circle at 20% 80%, rgba(139,92,246,0.1) 0%, transparent 50%); }
+    .lp-tech-content { max-width: 1400px; margin: 0 auto; position: relative; z-index: 1; }
+    .lp-tech-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 3rem; margin-top: 5rem; }
+    .lp-tech-card { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 3rem; text-align: center; transition: all 0.4s ease; }
+    .lp-tech-card:hover { background: rgba(255,255,255,0.08); border-color: var(--lp-primary); transform: translateY(-8px); }
+    .lp-tech-icon { width: 100px; height: 100px; margin: 0 auto 2rem; border-radius: 20px; background: linear-gradient(135deg, rgba(6,182,212,0.2) 0%, rgba(139,92,246,0.2) 100%); display: flex; align-items: center; justify-content: center; transition: transform 0.3s ease; }
+    .lp-tech-card:hover .lp-tech-icon { transform: scale(1.1); }
+    .lp-tech-icon svg { width: 50px; height: 50px; stroke: var(--lp-primary); stroke-width: 2; fill: none; }
+    .lp-tech-card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .lp-tech-card .lp-tech-stack-name { color: var(--lp-primary); font-size: 1.25rem; font-weight: 600; }
+
+    /* Stats */
+    .lp-stats-section { background: linear-gradient(135deg, var(--lp-primary) 0%, var(--lp-secondary) 100%); padding: 6rem 2rem; }
+    .lp-stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 3rem; max-width: 1400px; margin: 0 auto; }
+    .lp-stat-card { text-align: center; color: white; }
+    .lp-stat-number { font-family: 'Space Grotesk', sans-serif; font-size: 4rem; font-weight: 800; display: block; margin-bottom: 0.5rem; text-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+    .lp-stat-label { font-size: 1.15rem; opacity: 0.95; font-weight: 500; }
+
+    /* Demo */
+    .lp-demo-section { padding: 8rem 2rem; text-align: center; background: linear-gradient(to bottom, white 0%, #f8fafc 100%); }
+    .lp-demo-content { max-width: 900px; margin: 0 auto; }
+    .lp-demo-title { font-family: 'Space Grotesk', sans-serif; font-size: 3.5rem; font-weight: 800; margin-bottom: 1.5rem; background: linear-gradient(135deg, var(--lp-dark) 0%, var(--lp-primary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .lp-demo-description { font-size: 1.35rem; color: var(--lp-gray); margin-bottom: 3rem; line-height: 1.7; }
+    .lp-demo-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; margin-bottom: 3rem; }
+    .lp-demo-card { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 2rem; text-align: center; transition: all 0.3s ease; }
+    .lp-demo-card:hover { border-color: var(--lp-primary); box-shadow: 0 10px 30px rgba(6,182,212,0.15); transform: translateY(-4px); }
+    .lp-demo-card-icon { width: 56px; height: 56px; margin: 0 auto 1rem; border-radius: 12px; background: linear-gradient(135deg, rgba(6,182,212,0.15) 0%, rgba(139,92,246,0.15) 100%); display: flex; align-items: center; justify-content: center; }
+    .lp-demo-card-icon svg { width: 28px; height: 28px; stroke: var(--lp-primary); stroke-width: 2; fill: none; }
+    .lp-demo-card h4 { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--lp-dark); margin-bottom: 0.5rem; }
+    .lp-demo-card p { font-size: 0.9rem; color: var(--lp-gray); line-height: 1.5; }
+
+    /* Footer */
+    .lp-footer { background: var(--lp-dark); color: white; text-align: center; padding: 3rem 2rem; border-top: 1px solid rgba(255,255,255,0.1); }
+    .lp-footer-logo { font-family: 'Space Grotesk', sans-serif; font-size: 1.75rem; font-weight: 700; margin-bottom: 1rem; }
+    .lp-footer-shelf { color: #ffffff; }
+    .lp-footer-sense { color: var(--lp-primary); }
+    .lp-footer-text { color: #94a3b8; font-size: 0.95rem; }
+    .lp-footer-nexora { height: 22px; width: auto; display: inline-block; vertical-align: middle; margin: 0 6px; }
+
+    /* Reveal */
+    .lp-reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.4,0,0.2,1); }
+    .lp-reveal.active { opacity: 1; transform: translateY(0); }
+
+    /* Landing responsive */
+    @media (max-width: 1024px) {
+      .lp-hero-content, .lp-overview-grid { grid-template-columns: 1fr; }
+      .lp-hero h1 { font-size: 3.5rem; }
+      .lp-tech-grid { grid-template-columns: 1fr; }
+      .lp-stats-grid { grid-template-columns: repeat(2,1fr); }
+      .lp-nav-links { display: none; }
+      .lp-demo-cards { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .lp-hero h1 { font-size: 2.5rem; }
+      .lp-hero-buttons { flex-direction: column; }
+      .lp-btn { width: 100%; justify-content: center; }
+      .lp-floating-card { display: none; }
+    }
+
+    /* ═══════════════════════════════════════
+       APP STYLES
+    ═══════════════════════════════════════ */
+    #app { opacity: 0; transition: opacity 0.5s ease 0.3s; pointer-events: none; display: none; }
+    #app.show { opacity: 1; pointer-events: all; display: block; }
+
+    :root {
+      --background: #f8fafb; --foreground: #1e293b;
+      --card: #ffffff;
+      --primary: #22d3ee; --primary-foreground: #0e1117;
+      --secondary: #14b8a6;
+      --muted: #e2e8f0; --muted-foreground: #64748b;
+      --accent: #06b6d4; --accent-foreground: #ffffff;
+      --destructive: #ef4444;
+      --border: #cbd5e1; --warning: #f59e0b; --success: #22c55e;
+    }
+    body.dark {
+      --background: #0e1117; --foreground: #e2e8f0;
+      --card: #141820; --muted: #1e2530; --muted-foreground: #64748b; --border: #1e2530;
+    }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background-color: var(--background); color: var(--foreground); transition: background-color 0.3s, color 0.3s; }
+    .app-container { display: flex; height: 100vh; overflow: hidden; }
+    .circuit-pattern { background-image: linear-gradient(rgba(34,211,238,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(34,211,238,0.03) 1px,transparent 1px); background-size: 40px 40px; }
+    .icon { display: block; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+    /* Sidebar */
+    .sidebar { display: flex; flex-direction: column; height: 100vh; overflow-y: auto; width: 280px; flex-shrink: 0; background: linear-gradient(160deg, rgba(17,168,184,0.10) 0%, rgba(34,211,238,0.05) 35%, var(--card) 70%); border-right: 1px solid rgba(34,211,238,0.18); transition: margin-left 0.3s; }
+    body.dark .sidebar { background: linear-gradient(160deg, rgba(17,168,184,0.14) 0%, rgba(34,211,238,0.07) 35%, var(--card) 70%); border-right-color: rgba(34,211,238,0.15); }
+    .sidebar.hidden { margin-left: -280px; }
+    .logo-section { padding: 24px; border-bottom: 1px solid var(--border); }
+    .logo-content { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .logo-icon-sm { width: 48px; height: 48px; border-radius: 8px; background: linear-gradient(to bottom right,rgba(34,211,238,0.2),rgba(20,184,166,0.2)); display: flex; align-items: center; justify-content: center; border: 2px solid var(--primary); box-shadow: 0 0 20px rgba(34,211,238,0.15),0 0 40px rgba(34,211,238,0.08); overflow: hidden; }
+    .logo-icon-sm img { width: 100%; height: 100%; object-fit: cover; }
+    .logo-text h1 { font-size: 20px; font-weight: 700; color: var(--foreground); }
+    .logo-text h1 span { color: var(--primary); text-shadow: 0 0 10px rgba(34,211,238,0.5); }
+    .logo-text p { font-size: 11px; color: var(--muted-foreground); letter-spacing: 0.05em; }
+    .nav-menu { flex: 1; padding: 16px; list-style: none; }
+    .nav-item { margin-bottom: 8px; }
+    .nav-link { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; text-decoration: none; color: var(--muted-foreground); transition: all 0.3s; cursor: pointer; border: 1px solid transparent; font-weight: 500; }
+    .nav-link:hover { background: var(--accent); color: var(--accent-foreground); }
+    .nav-link.active { background: rgba(34,211,238,0.1); border-color: rgba(34,211,238,0.3); color: var(--primary); }
+    .theme-toggle { margin-top: auto; padding: 16px 16px 8px; border-top: 1px solid var(--border); }
+    .theme-toggle button { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; background: transparent; border: none; color: var(--muted-foreground); cursor: pointer; transition: all 0.3s; font-weight: 500; }
+    .theme-toggle button:hover { background: var(--accent); color: var(--accent-foreground); }
+
+    /* Header */
+    .header { border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); }
+    body.dark .header { background: rgba(20,24,32,0.8); }
+    .header-content { display: flex; align-items: center; justify-content: space-between; padding: 6px 16px; }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .menu-btn { padding: 8px; border-radius: 8px; background: transparent; border: none; cursor: pointer; color: var(--foreground); transition: all 0.3s; }
+    .menu-btn:hover { background: var(--accent); }
+    .status-indicator { display: flex; align-items: center; gap: 8px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); animation: pulse-glow 2s ease-in-out infinite; }
+    @keyframes pulse-glow { 0%,100%{opacity:1;box-shadow:0 0 8px currentColor} 50%{opacity:0.6;box-shadow:0 0 4px currentColor} }
+    .status-text { font-size: 14px; color: var(--muted-foreground); font-weight: 500; }
+    .header-right { display: flex; align-items: center; gap: 16px; white-space: nowrap; }
+    .header-time { font-size: 14px; font-family: 'Courier New', monospace; color: var(--foreground); letter-spacing: 0.05em; }
+    .header-logo { width: 60px; height: 60px; object-fit: contain; }
+
+    /* Main */
+    .main-content { flex: 1; overflow-y: auto; }
+    .page { display: none; animation: fadeIn 0.3s ease; }
+    .page.active { display: block; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    .page-wrapper { padding: 24px; }
+    .page-title { font-size: 13px; font-weight: 500; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.1em; }
+
+    /* ═══════════════════════════════════════
+       CAMERA GRID — Doc 1 style
+    ═══════════════════════════════════════ */
+    .camera-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: #000;
+      border: 4px solid #000;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    @media(max-width:900px){ .camera-grid { grid-template-columns: repeat(2,1fr); } }
+    @media(max-width:560px){ .camera-grid { grid-template-columns: 1fr; } }
+
+    .camera-card {
+      position: relative;
+      aspect-ratio: 16/10;
+      background: #0a0e12;
+      overflow: hidden;
+      cursor: pointer;
+      transition: none;
+    }
+
+    .camera-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: saturate(0.9) brightness(0.85) contrast(1.05);
+    }
+
+    .camera-vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%);
+      z-index: 2;
+    }
+
+    .camera-scanline {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,180,0.015) 2px, rgba(0,255,180,0.015) 3px);
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .camera-hover {
+      position: absolute;
+      inset: 0;
+      background: rgba(6,182,212,0.06);
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 4;
+    }
+    .camera-card:hover .camera-hover { opacity: 1; }
+
+    /* Corner brackets */
+    .camera-corners { position: absolute; inset: 0; z-index: 5; }
+    .camera-corner { position: absolute; width: 16px; height: 16px; border-color: rgba(6,182,212,0.5); }
+    .camera-corner.tl { top: 8px; left: 8px; border-top: 2px solid; border-left: 2px solid; }
+    .camera-corner.tr { top: 8px; right: 8px; border-top: 2px solid; border-right: 2px solid; }
+    .camera-corner.bl { bottom: 8px; left: 8px; border-bottom: 2px solid; border-left: 2px solid; }
+    .camera-corner.br { bottom: 8px; right: 8px; border-bottom: 2px solid; border-right: 2px solid; }
+
+    /* HUD top-left: timestamp */
+    .camera-hud-tl { position: absolute; top: 12px; left: 12px; z-index: 30; font-family: 'Courier New', monospace; line-height: 1.4; }
+    .camera-time { font-size: 11px; color: #00ff99; font-weight: 700; letter-spacing: 0.08em; text-shadow: 0 0 6px rgba(0,255,153,0.7); }
+    .camera-date { font-size: 9px; color: rgba(0,255,153,0.65); letter-spacing: 0.06em; }
+
+    /* HUD top-right: REC */
+    .camera-hud-tr { position: absolute; top: 12px; right: 12px; z-index: 30; display: flex; align-items: center; gap: 5px; }
+    .camera-rec-dot { width: 7px; height: 7px; border-radius: 50%; background: #ff2d2d; box-shadow: 0 0 8px #ff2d2d; animation: blink 1.4s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.15} }
+    .camera-rec-text { font-size: 9px; font-weight: 700; color: #ff5555; letter-spacing: 0.15em; font-family: 'Courier New', monospace; text-shadow: 0 0 6px rgba(255,45,45,0.6); }
+
+    /* CAM label below timestamp */
+    .camera-label { position: absolute; top: 40px; left: 12px; z-index: 30; font-size: 11px; font-weight: 700; color: #00e5ff; letter-spacing: 0.12em; font-family: 'Courier New', monospace; text-shadow: 0 0 8px rgba(0,229,255,0.6); }
+
+    /* Detection count top-right below REC */
+    .camera-detections { position: absolute; top: 40px; right: 12px; z-index: 30; font-size: 9px; font-weight: 700; color: #00e5ff; letter-spacing: 0.1em; font-family: 'Courier New', monospace; text-shadow: 0 0 6px rgba(0,229,255,0.6); }
+
+    /* HUD bottom */
+    .camera-hud-bl { position: absolute; bottom: 12px; left: 12px; right: 12px; z-index: 30; display: flex; justify-content: space-between; align-items: flex-end; }
+    .camera-location { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.85); letter-spacing: 0.1em; font-family: 'Courier New', monospace; text-shadow: 0 1px 4px rgba(0,0,0,0.8); }
+    .camera-status-ok { font-size: 9px; color: #00ff99; letter-spacing: 0.1em; font-family: 'Courier New', monospace; }
+    .camera-status-alert { font-size: 9px; color: #ff4444; letter-spacing: 0.1em; font-family: 'Courier New', monospace; animation: blink 0.9s infinite; }
+
+    /* Hover info overlay — full Doc 1 style */
+    .camera-info-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 40;
+      background: linear-gradient(to top, rgba(6,182,212,0.95), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 1.5rem;
+      pointer-events: none;
+    }
+    .camera-card:hover .camera-info-overlay { opacity: 1; }
+
+    .camera-info-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700; color: white; margin-bottom: 1rem; }
+    .camera-info-badges { display: flex; gap: 0.75rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
+    .camera-info-badge { padding: 0.5rem 1rem; background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); border-radius: 8px; font-size: 0.875rem; font-weight: 600; color: white; display: flex; align-items: center; gap: 0.5rem; }
+    .camera-info-badge.alert { background: rgba(255,68,68,0.2); border: 1px solid rgba(255,68,68,0.3); }
+    .camera-info-text { font-size: 0.875rem; color: rgba(255,255,255,0.8); }
+
+    /* Analyzing overlay */
+    .analyzing-overlay { position: absolute; inset: 0; background: rgba(5,10,14,0.92); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
+    .spinner { width: 36px; height: 36px; border: 3px solid rgba(0,229,255,0.15); border-top-color: #00e5ff; border-right-color: #00e5ff; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .analyzing-text { font-size: 11px; font-weight: 700; color: #00e5ff; letter-spacing: 0.15em; font-family: 'Courier New', monospace; }
+
+    /* ═══════════════════════════════════════
+       DASHBOARD — Doc 1 style
+    ═══════════════════════════════════════ */
+    .dashboard-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .dashboard-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      border: 2px solid;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      transition: all 0.3s;
+    }
+    body.dark .dashboard-card { background: var(--card); }
+    .dashboard-card:hover { box-shadow: 0 10px 40px rgba(0,0,0,0.1); transform: translateY(-2px); }
+    .dashboard-card.primary { border-color: rgba(6,182,212,0.2); background: linear-gradient(135deg, rgba(6,182,212,0.08) 0%, rgba(6,182,212,0.03) 100%); }
+    .dashboard-card.primary:hover { border-color: #06b6d4; }
+    .dashboard-card.danger { border-color: rgba(239,68,68,0.2); background: linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(239,68,68,0.03) 100%); }
+    .dashboard-card.danger:hover { border-color: #ef4444; }
+    .dashboard-card.neutral { border-color: #e2e8f0; }
+    .dashboard-card.neutral:hover { border-color: #06b6d4; }
+
+    .dashboard-card-content { display: flex; align-items: center; gap: 1.25rem; }
+    .dashboard-icon { width: 64px; height: 64px; border-radius: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .dashboard-icon.primary { background: linear-gradient(135deg, #06b6d4, #8b5cf6); }
+    .dashboard-icon.danger { background: linear-gradient(135deg, #ef4444, #f59e0b); }
+    .dashboard-icon.success { background: linear-gradient(135deg, #22c55e, #14b8a6); }
+    .dashboard-info p { font-size: 0.875rem; color: var(--muted-foreground); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+    .dashboard-info h3 { font-family: 'Space Grotesk', sans-serif; font-size: 3rem; font-weight: 800; }
+
+    /* Charts grid */
+    .charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; margin-bottom: 2rem; }
+    .chart-card { background: white; border-radius: 16px; padding: 2rem; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    body.dark .chart-card { background: var(--card); border-color: var(--border); }
+    .chart-title { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2rem; }
+    .chart-title h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.125rem; font-weight: 700; color: var(--foreground); }
+    .chart-container { height: 300px; }
+
+    /* ── Doc 1 Insight Cards ── */
+    .insights-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+    .insight-card {
+      border-radius: 16px;
+      padding: 2rem;
+      color: white;
+    }
+    .insight-card.primary { background: linear-gradient(135deg, #06b6d4, #8b5cf6); }
+    .insight-card.success { background: linear-gradient(135deg, #22c55e, #14b8a6); }
+    .insight-card.warning { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+    .insight-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+    .insight-header h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.25rem; font-weight: 700; }
+    .insight-value { font-family: 'Space Grotesk', sans-serif; font-size: 3rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .insight-label { color: rgba(255,255,255,0.8); font-size: 0.875rem; }
+
+    /* Inspect page */
+    .inspect-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+    .inspect-header-left { display:flex; align-items:center; gap:16px; }
+    .back-btn { display:flex; align-items:center; gap:8px; padding:8px 16px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--foreground); cursor:pointer; transition:all 0.3s; font-size:14px; font-weight:500; }
+    .back-btn:hover { border-color:rgba(34,211,238,0.3); background:var(--accent); }
+    .inspect-title h2 { font-size:18px; font-weight:700; color:var(--foreground); }
+    .inspect-title p { font-size:14px; color:var(--muted-foreground); }
+    .inspect-legend { display:flex; gap:16px; }
+    .legend-item { display:flex; align-items:center; gap:8px; padding:8px 16px; border-radius:8px; }
+    .legend-product { border:1px solid rgba(34,211,238,0.3); background:rgba(34,211,238,0.1); }
+    .legend-missing { border:1px solid rgba(239,68,68,0.3); background:rgba(239,68,68,0.1); }
+    .legend-text { font-size:14px; font-weight:600; }
+    .inspect-grid { display:grid; grid-template-columns:1fr 320px; gap:24px; }
+    .inspect-canvas-container { border-radius:12px; border:1px solid var(--border); background:var(--card); padding:24px; }
+    .canvas-section-title { font-size:13px; font-weight:600; color:var(--muted-foreground); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:16px; }
+    .canvas-wrapper { position:relative; border-radius:8px; overflow:hidden; border:2px solid rgba(34,211,238,0.3); background:var(--background); box-shadow:0 0 20px rgba(34,211,238,0.15); }
+    #inspectCanvas { width:100%; display:block; }
+    .inspect-sidebar { display:flex; flex-direction:column; gap:24px; }
+    .stats-card { border-radius:12px; border:1px solid var(--border); background:var(--card); padding:24px; }
+    .stats-grid { display:flex; flex-direction:column; gap:12px; }
+    .stat-item { border-radius:8px; padding:16px; text-align:center; }
+    .stat-total { background:rgba(100,116,139,0.1); border:1px solid var(--border); }
+    .stat-product { background:rgba(34,211,238,0.1); border:1px solid rgba(34,211,238,0.3); box-shadow:0 0 10px rgba(34,211,238,0.1); }
+    .stat-missing { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); }
+    .stat-value { font-size:32px; font-weight:700; }
+    .stat-label { font-size:11px; color:var(--muted-foreground); text-transform:uppercase; letter-spacing:0.05em; margin-top:4px; }
+    .status-card { text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:12px; padding:24px; }
+    .status-card.warning { border:1px solid rgba(245,158,11,0.3); background:rgba(245,158,11,0.05); }
+    .status-card.success { border:1px solid rgba(34,197,94,0.3); background:rgba(34,197,94,0.05); }
+    .status-icon { display:flex; align-items:center; justify-content:center; margin:0 auto 12px auto; width:48px; height:48px; }
+    .status-title { font-size:18px; font-weight:700; margin-bottom:8px; }
+    .status-message { font-size:14px; color:var(--muted-foreground); }
+
+    /* About */
+    .about-modern-container { max-width: 1400px; margin: 0 auto; }
+    .about-modern-header { text-align: center; margin-bottom: 4rem; padding: 3rem 2rem; border-radius: 24px; background: linear-gradient(135deg, rgba(34,211,238,0.1) 0%, rgba(139,92,246,0.1) 100%); border: 1px solid rgba(34,211,238,0.2); }
+    .about-modern-badge { display: inline-flex; align-items: center; gap: 8px; padding: 0.5rem 1.25rem; border-radius: 50px; background: rgba(34,211,238,0.15); border: 1px solid rgba(34,211,238,0.3); margin-bottom: 1.5rem; }
+    .about-modern-badge-text { font-size: 0.875rem; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: 0.1em; }
+    .about-modern-title { font-family: 'Space Grotesk', sans-serif; font-size: 3.5rem; font-weight: 800; margin-bottom: 1.5rem; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .about-modern-subtitle { font-size: 1.35rem; color: var(--muted-foreground); max-width: 900px; margin: 0 auto; line-height: 1.8; }
+    .about-modern-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-bottom: 4rem; }
+    .about-modern-content { background: var(--card); padding: 3rem; border-radius: 24px; border: 1px solid var(--border); transition: all 0.3s; }
+    .about-modern-content:hover { transform: translateY(-4px); box-shadow: 0 20px 60px rgba(34,211,238,0.15); border-color: rgba(34,211,238,0.3); }
+    .about-modern-content h3 { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; font-weight: 700; color: var(--foreground); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem; }
+    .about-modern-content h3::before { content: ''; width: 4px; height: 2rem; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); border-radius: 2px; }
+    .about-modern-content p { font-size: 1.1rem; line-height: 1.8; color: var(--muted-foreground); margin-bottom: 1.25rem; }
+    .about-modern-image { position: relative; border-radius: 24px; overflow: hidden; height: 500px; border: 1px solid rgba(34,211,238,0.2); box-shadow: 0 20px 60px rgba(34,211,238,0.15); }
+    .about-modern-image img { width: 100%; height: 100%; object-fit: cover; }
+    .about-modern-features { display: grid; grid-template-columns: repeat(2,1fr); gap: 2rem; margin-bottom: 4rem; }
+    .about-modern-feature-card { background: var(--card); border-radius: 20px; padding: 2.5rem; border: 1px solid var(--border); transition: all 0.4s; position: relative; overflow: hidden; }
+    .about-modern-feature-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--primary), var(--secondary)); transform: scaleX(0); transition: transform 0.4s ease; }
+    .about-modern-feature-card:hover::before { transform: scaleX(1); }
+    .about-modern-feature-card:hover { transform: translateY(-6px); box-shadow: 0 20px 60px rgba(34,211,238,0.15); border-color: var(--primary); }
+    .about-modern-feature-header { display: flex; align-items: start; gap: 1rem; margin-bottom: 1.5rem; }
+    .about-modern-feature-icon { width: 56px; height: 56px; border-radius: 14px; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.3s ease; box-shadow: 0 8px 24px rgba(34,211,238,0.25); }
+    .about-modern-feature-card:hover .about-modern-feature-icon { transform: scale(1.1) rotate(5deg); }
+    .about-modern-feature-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--foreground); margin-bottom: 1rem; }
+    .about-modern-feature-desc { font-size: 1.05rem; line-height: 1.7; color: var(--muted-foreground); }
+    .about-modern-tech-section { background: linear-gradient(135deg, rgba(34,211,238,0.05) 0%, rgba(139,92,246,0.05) 100%); border: 1px solid rgba(34,211,238,0.1); border-radius: 24px; padding: 4rem; margin-bottom: 4rem; }
+    .about-modern-tech-header { text-align: center; margin-bottom: 3rem; }
+    .about-modern-tech-header h2 { font-family: 'Space Grotesk', sans-serif; font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .about-modern-tech-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 2rem; }
+    .about-modern-tech-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 2.5rem; text-align: center; transition: all 0.4s; }
+    .about-modern-tech-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 20px 60px rgba(34,211,238,0.2); border-color: var(--primary); }
+    .about-modern-tech-icon { width: 80px; height: 80px; margin: 0 auto 1.5rem; border-radius: 16px; background: linear-gradient(135deg, rgba(34,211,238,0.15) 0%, rgba(139,92,246,0.15) 100%); display: flex; align-items: center; justify-content: center; transition: transform 0.3s ease; }
+    .about-modern-tech-card:hover .about-modern-tech-icon { transform: scale(1.15) rotate(-5deg); }
+    .about-modern-tech-card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .about-modern-tech-card .tech-stack-name { color: var(--primary); font-size: 1.1rem; font-weight: 600; }
+    .about-modern-footer { text-align: center; padding: 3rem; border-radius: 16px; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; }
+    .about-modern-footer p { font-size: 1.25rem; font-weight: 600; letter-spacing: 0.05em; }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 1024px) {
+      .inspect-grid, .charts-grid, .about-modern-grid, .about-modern-features { grid-template-columns: 1fr; }
+      .dashboard-stats, .insights-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .sidebar { position: absolute; z-index: 100; }
+      .about-modern-tech-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════
+       LANDING PAGE
+  ═══════════════════════════════════════ -->
+  <div id="landing">
+
+    <nav class="lp-navbar" id="lpNavbar">
+      <div class="lp-navbar-content">
+        <div class="lp-logo">
+          <div class="lp-logo-icon">
+            <img src="images/retaillogo.jpg" alt="ShelfSense Logo">
+          </div>
+          <div class="lp-logo-text-wrap">
+            <div class="lp-logo-text">
+              <span class="lp-logo-shelf">SHELF</span><span class="lp-logo-sense">SENSE</span>
+            </div>
+            <div class="lp-logo-subtitle">AI Retail Monitor</div>
+          </div>
+        </div>
+        <div class="lp-navbar-right">
+          <ul class="lp-nav-links">
+            <li><a href="#lp-overview">Overview</a></li>
+            <li><a href="#lp-features">Features</a></li>
+            <li><a href="#lp-technology">Technology</a></li>
+            <li><a href="#lp-demo">Demo</a></li>
+          </ul>
+          <img src="images/nexora.png" alt="Nexora" class="lp-nexora-logo">
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="lp-hero">
+      <div class="lp-grid-pattern"></div>
+      <div class="lp-hero-content">
+        <div class="lp-hero-text">
+          <div class="lp-hero-badge">
+            <div class="lp-badge-dot"></div>
+            <span>AI-Powered Retail Intelligence</span>
+          </div>
+          <h1>Transform Your Retail Operations</h1>
+          <p class="lp-subtitle">
+            Advanced computer vision system that monitors shelf inventory in real-time,
+            automatically detects gaps, and sends instant alerts to keep your shelves fully stocked.
+          </p>
+          <div class="lp-hero-buttons">
+            <button class="lp-btn lp-btn-primary" onclick="enterApp()">
+              Get Started
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+            <a href="#lp-overview" class="lp-btn lp-btn-secondary">Learn More</a>
+          </div>
+        </div>
+        <div class="lp-hero-image">
+          <img src="images/storeai.jpg" alt="Retail Store AI" class="lp-hero-image-main">
+          <div class="lp-floating-card lp-floating-card-1">
+            <span class="lp-card-stat">99%</span>
+            <span class="lp-card-label">Detection Accuracy</span>
+          </div>
+          <div class="lp-floating-card lp-floating-card-2">
+            <span class="lp-card-stat">24/7</span>
+            <span class="lp-card-label">Live Monitoring</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Overview -->
+    <section id="lp-overview" class="lp-section">
+      <div class="lp-section-header lp-reveal">
+        <span class="lp-section-badge">About the Project</span>
+        <h2 class="lp-section-title">What is ShelfSense AI?</h2>
+        <p class="lp-section-description">Revolutionary AI technology designed to solve retail's biggest challenge: maintaining optimal inventory levels across all store locations.</p>
+      </div>
+      <div class="lp-overview-grid">
+        <div class="lp-overview-content lp-reveal">
+          <h3>The Problem We Solve</h3>
+          <p>Empty shelves cost retailers billions annually in lost sales and customer frustration. Traditional manual checks are time-consuming, error-prone, and can't keep pace with modern retail demands.</p>
+          <h3 style="margin-top:2rem">Our Solution</h3>
+          <p>ShelfSense AI uses state-of-the-art computer vision algorithms to continuously monitor your shelves, instantly identifying products and gaps. When stock runs low, the system automatically alerts your team, enabling rapid response and ensuring shelves stay full.</p>
+          <p>This intelligent solution helps retailers maintain optimal stock levels, reduce out-of-stock situations by up to 85%, improve operational efficiency, and significantly enhance customer satisfaction.</p>
+        </div>
+        <div class="lp-overview-image lp-reveal">
+          <img src="images/retailabout.webp" alt="AI Retail Technology">
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section id="lp-features" class="lp-section" style="background:#f8fafc;max-width:100%;padding-left:0;padding-right:0;">
+      <div style="max-width:1400px;margin:0 auto;padding:0 2rem;">
+        <div class="lp-section-header lp-reveal">
+          <span class="lp-section-badge">Key Features</span>
+          <h2 class="lp-section-title">Powerful Capabilities</h2>
+          <p class="lp-section-description">Everything you need to revolutionize your inventory management and maximize sales</p>
+        </div>
+        <div class="lp-features-grid">
+          <div class="lp-feature-card lp-reveal">
+            <div class="lp-feature-icon"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+            <h3>Real-Time Detection</h3>
+            <p>Continuously monitors shelf inventory with 99% accuracy, identifying products and empty spaces instantly with advanced computer vision technology.</p>
+          </div>
+          <div class="lp-feature-card lp-reveal">
+            <div class="lp-feature-icon"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+            <h3>Instant Alerts</h3>
+            <p>Automatically generates real-time notifications when missing items are detected, enabling your team to respond immediately and minimize out-of-stock time.</p>
+          </div>
+          <div class="lp-feature-card lp-reveal">
+            <div class="lp-feature-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+            <h3>Visual Annotations</h3>
+            <p>Clear visual feedback with AI-generated bounding boxes around detected items, making it easy to understand exactly what's on your shelves at a glance.</p>
+          </div>
+          <div class="lp-feature-card lp-reveal">
+            <div class="lp-feature-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div>
+            <h3>Analytics Dashboard</h3>
+            <p>Comprehensive dashboard with detailed detection statistics, historical trends, and actionable insights across all aisles and store locations.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Technology -->
+    <section id="lp-technology" class="lp-tech-section">
+      <div class="lp-tech-content">
+        <div class="lp-section-header lp-reveal">
+          <span class="lp-section-badge" style="background:rgba(6,182,212,0.2);border-color:rgba(6,182,212,0.3);">Technology Stack</span>
+          <h2 class="lp-section-title" style="background:linear-gradient(135deg,white 0%,#06b6d4 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Built with Cutting-Edge Technology</h2>
+          <p class="lp-section-description" style="color:#cbd5e1;">Powered by industry-leading frameworks and AI models for unmatched performance</p>
+        </div>
+        <div class="lp-tech-grid">
+          <div class="lp-tech-card lp-reveal">
+            <div class="lp-tech-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+            <h3>Backend</h3><p class="lp-tech-stack-name">FastAPI + Python</p>
+          </div>
+          <div class="lp-tech-card lp-reveal">
+            <div class="lp-tech-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></div>
+            <h3>AI Model</h3><p class="lp-tech-stack-name">Roboflow CV API</p>
+          </div>
+          <div class="lp-tech-card lp-reveal">
+            <div class="lp-tech-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg></div>
+            <h3>Frontend</h3><p class="lp-tech-stack-name">HTML + JavaScript</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="lp-stats-section">
+      <div class="lp-stats-grid">
+        <div class="lp-stat-card lp-reveal"><span class="lp-stat-number" data-target="99">0</span><span class="lp-stat-label">Detection Accuracy</span></div>
+        <div class="lp-stat-card lp-reveal"><span class="lp-stat-number" data-target="50">0</span><span class="lp-stat-label">Faster Restocking</span></div>
+        <div class="lp-stat-card lp-reveal"><span class="lp-stat-number" data-target="24">0</span><span class="lp-stat-label">24/7 Monitoring</span></div>
+        <div class="lp-stat-card lp-reveal"><span class="lp-stat-number" data-target="85">0</span><span class="lp-stat-label">Efficiency Improvement</span></div>
+      </div>
+    </section>
+
+    <!-- Demo -->
+    <section id="lp-demo" class="lp-demo-section">
+      <div class="lp-demo-content lp-reveal">
+        <h2 class="lp-demo-title">See ShelfSense AI in Action</h2>
+        <p class="lp-demo-description">Experience the power of real-time shelf monitoring firsthand. Jump into the live dashboard and explore AI detection across all store aisles — no setup required.</p>
+        <div class="lp-demo-cards">
+          <div class="lp-demo-card">
+            <div class="lp-demo-card-icon"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+            <h4>Live Camera Feeds</h4>
+            <p>View all 9 store cameras in real-time with AI overlay and detection status</p>
+          </div>
+          <div class="lp-demo-card">
+            <div class="lp-demo-card-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+            <h4>Live Analysis</h4>
+            <p>Upload any shelf image and receive instant AI-powered detection results</p>
+          </div>
+          <div class="lp-demo-card">
+            <div class="lp-demo-card-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+            <h4>Analytics Dashboard</h4>
+            <p>Explore charts and metrics showing detection data across every aisle</p>
+          </div>
+        </div>
+        <button class="lp-btn lp-btn-primary" style="font-size:1.1rem;padding:1.25rem 3rem;" onclick="enterApp()">
+          Launch Dashboard
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="lp-footer">
+      <div class="lp-footer-logo"><span class="lp-footer-shelf">SHELF</span><span class="lp-footer-sense">SENSE</span></div>
+      <p class="lp-footer-text">Powered by <img src="images/nexora.png" alt="Nexora" class="lp-footer-nexora"> &nbsp;•&nbsp; &copy; 2026 ShelfSense AI. All rights reserved.</p>
+    </footer>
+
+  </div><!-- /landing -->
+
+
+  <!-- ═══════════════════════════════════════
+       MAIN APP
+  ═══════════════════════════════════════ -->
+  <div id="app">
+    <div class="app-container">
+
+      <aside class="sidebar" id="sidebar">
+        <div class="logo-section">
+          <div class="logo-content">
+            <div class="logo-icon-sm"><img src="images/retaillogo.jpg" alt="ShelfSense Logo"></div>
+            <div class="logo-text">
+              <h1>SHELF<span>SENSE</span></h1>
+              <p>AI Retail Monitor</p>
+            </div>
+          </div>
+        </div>
+        <nav>
+          <ul class="nav-menu">
+            <li class="nav-item"><a class="nav-link active" data-page="cameras"><svg class="icon" viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>Cameras</span></a></li>
+            <li class="nav-item"><a class="nav-link" data-page="dashboard"><svg class="icon" viewBox="0 0 24 24" style="width:18px;height:18px"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Dashboard</span></a></li>
+            <li class="nav-item"><a class="nav-link" data-page="live"><svg class="icon" viewBox="0 0 24 24" style="width:18px;height:18px"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Live Analysis</span></a></li>
+            <li class="nav-item"><a class="nav-link" data-page="about"><svg class="icon" viewBox="0 0 24 24" style="width:18px;height:18px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span>About</span></a></li>
+          </ul>
+        </nav>
+        <div class="theme-toggle">
+          <button id="themeToggle"><svg class="icon" viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><span id="themeText">Dark Mode</span></button>
+        </div>
+      </aside>
+
+      <div style="flex:1;display:flex;flex-direction:column;min-width:0;">
+        <header class="header">
+          <div class="header-content">
+            <div class="header-left">
+              <button class="menu-btn" id="menuBtn"><svg class="icon" viewBox="0 0 24 24" style="width:18px;height:18px"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+              <div class="status-indicator"><div class="status-dot"></div><span class="status-text">System Active</span></div>
+            </div>
+            <div class="header-right">
+              <div class="header-time" id="headerTime">00:00:00</div>
+              <button onclick="goHome()" style="display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.25);color:var(--foreground);cursor:pointer;font-size:13px;font-weight:600;transition:all 0.2s;" onmouseover="this.style.background='rgba(34,211,238,0.18)'" onmouseout="this.style.background='rgba(34,211,238,0.08)'">
+                <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:var(--primary);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                <span style="color:var(--primary);">Home</span>
+              </button>
+              <img src="images/nexora.png" alt="Nexora" class="header-logo">
+            </div>
+          </div>
+        </header>
+
+        <main class="main-content circuit-pattern">
+
+          <!-- ── Cameras Page ── -->
+          <div class="page active" id="cameras-page">
+            <div style="padding:16px 24px 8px;"><div style="display:flex;align-items:center;gap:8px;"><div class="status-dot"></div><h2 class="page-title">Live Camera Feeds</h2></div></div>
+            <div class="camera-grid" id="cameraGrid"></div>
+          </div>
+
+          <!-- ── Inspect Page ── -->
+          <div class="page" id="inspect-page">
+            <div class="page-wrapper">
+              <div class="inspect-header">
+                <div class="inspect-header-left">
+                  <button class="back-btn" onclick="navigateTo('cameras')"><svg class="icon" viewBox="0 0 24 24" style="width:18px;height:18px"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg><span>Back</span></button>
+                  <div class="inspect-title"><h2 id="inspectCameraName">Camera</h2><p>AI Detection Results</p></div>
+                </div>
+                <div class="inspect-legend">
+                  <div class="legend-item legend-product"><svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px;color:var(--primary)"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span class="legend-text" style="color:var(--primary)">Product</span></div>
+                  <div class="legend-item legend-missing"><svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px;color:var(--destructive)"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span class="legend-text" style="color:var(--destructive)">Missing</span></div>
+                </div>
+              </div>
+              <div class="inspect-grid">
+                <div class="inspect-canvas-container">
+                  <h3 class="canvas-section-title">Detection Results</h3>
+                  <div class="canvas-wrapper"><canvas id="inspectCanvas"></canvas></div>
+                </div>
+                <div class="inspect-sidebar">
+                  <div class="stats-card">
+                    <h3 class="canvas-section-title">Summary</h3>
+                    <div class="stats-grid">
+                      <div class="stat-item stat-total"><p class="stat-value" style="color:var(--foreground)" id="inspectTotal">0</p><p class="stat-label">Total Detections</p></div>
+                      <div class="stat-item stat-product"><p class="stat-value" style="color:var(--primary)" id="inspectProducts">0</p><p class="stat-label">Products</p></div>
+                      <div class="stat-item stat-missing"><p class="stat-value" style="color:var(--destructive)" id="inspectMissing">0</p><p class="stat-label">Missing</p></div>
+                    </div>
+                  </div>
+                  <div class="status-card" id="inspectStatusCard">
+                    <div class="status-icon"><svg id="inspectStatusIcon" viewBox="0 0 24 24" class="icon" style="width:36px;height:36px"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></div>
+                    <p class="status-title" id="inspectStatusTitle">Status</p>
+                    <p class="status-message" id="inspectStatusMessage"></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Live Analysis Page ── -->
+          <div class="page" id="live-page">
+            <div class="page-wrapper">
+              <div style="margin-bottom:16px;"><div style="display:flex;align-items:center;gap:8px;"><div class="status-dot"></div><h2 class="page-title">Live Testing Mode</h2></div></div>
+
+              <div style="display:grid;grid-template-columns:1fr 2fr;gap:32px;align-items:start;">
+
+                <!-- LEFT: QR + steps -->
+                <div style="position:sticky;top:24px;">
+                  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+                    <svg class="icon" viewBox="0 0 24 24" style="width:22px;height:22px;color:var(--primary)"><path d="M8 21h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2z"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                    <h2 style="font-size:18px;font-weight:700;color:var(--foreground);">Scan with Phone</h2>
+                  </div>
+                  <p style="font-size:14px;color:var(--muted-foreground);margin-bottom:24px;line-height:1.7;">Scan this QR code with your phone to access this page and upload shelf images directly from your mobile device for instant AI detection.</p>
+
+                  <div style="display:flex;justify-content:center;align-items:center;padding:24px;background:white;border-radius:16px;border:2px solid rgba(34,211,238,0.3);margin-bottom:24px;box-shadow:0 0 24px rgba(34,211,238,0.12);">
+                    <img src="images/qrcode.png" alt="QR Code" style="width:200px;height:200px;display:block;">
+                  </div>
+
+                  <div style="background:rgba(34,211,238,0.05);border:1px solid rgba(34,211,238,0.15);border-radius:12px;padding:20px;">
+                    <h3 style="font-size:13px;font-weight:700;color:var(--foreground);margin-bottom:14px;text-transform:uppercase;letter-spacing:0.08em;">How to use</h3>
+                    <div style="display:flex;flex-direction:column;gap:12px;">
+                      <div style="display:flex;align-items:center;gap:12px;"><div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--primary),#8b5cf6);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:#0e1117;">1</div><span style="font-size:13px;color:var(--muted-foreground);">Open camera on your phone</span></div>
+                      <div style="display:flex;align-items:center;gap:12px;"><div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--primary),#8b5cf6);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:#0e1117;">2</div><span style="font-size:13px;color:var(--muted-foreground);">Scan the QR code above</span></div>
+                      <div style="display:flex;align-items:center;gap:12px;"><div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--primary),#8b5cf6);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:#0e1117;">3</div><span style="font-size:13px;color:var(--muted-foreground);">Access the page on mobile</span></div>
+                      <div style="display:flex;align-items:center;gap:12px;"><div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--primary),#8b5cf6);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:#0e1117;">4</div><span style="font-size:13px;color:var(--muted-foreground);">Capture &amp; get live AI detection</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- RIGHT: large shelf image -->
+                <div>
+                  <div style="margin-bottom:16px;">
+                    <h2 style="font-size:18px;font-weight:700;color:var(--foreground);margin-bottom:6px;">Live Demo View</h2>
+                    <p style="font-size:14px;color:var(--muted-foreground);">Sample shelf being monitored by the AI detection system</p>
+                  </div>
+                  <div style="border-radius:16px;overflow:hidden;border:3px solid rgba(34,211,238,0.4);box-shadow:0 0 40px rgba(34,211,238,0.18);background:var(--muted);">
+                    <img src="images/77.jpg" alt="Live Demo — Aisle 6 Shelf" style="display:block;width:100%;height:auto;">
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;margin-top:14px;">
+                    <div style="width:8px;height:8px;border-radius:50%;background:#22c55e;animation:pulse-glow 2s ease-in-out infinite;flex-shrink:0;"></div>
+                    <span style="font-size:13px;color:var(--muted-foreground);font-weight:500;">Aisle 6 · Live feed simulation</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Dashboard Page — Doc 1 style ── -->
+          <div class="page" id="dashboard-page">
+            <div class="page-wrapper">
+              <div style="margin-bottom:24px;"><div style="display:flex;align-items:center;gap:8px;"><svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px;color:var(--primary)"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><h2 class="page-title">Analytics Dashboard</h2></div></div>
+
+              <!-- Top stat cards -->
+              <div class="dashboard-stats">
+                <div class="dashboard-card primary">
+                  <div class="dashboard-card-content">
+                    <div class="dashboard-icon primary">
+                      <svg class="icon" style="width:32px;height:32px;stroke:white" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    </div>
+                    <div class="dashboard-info">
+                      <p>Total Products</p>
+                      <h3 style="background:linear-gradient(135deg,#06b6d4,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text" id="dashTotalProducts">0</h3>
+                    </div>
+                  </div>
+                </div>
+                <div class="dashboard-card danger">
+                  <div class="dashboard-card-content">
+                    <div class="dashboard-icon danger">
+                      <svg class="icon" style="width:32px;height:32px;stroke:white" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </div>
+                    <div class="dashboard-info">
+                      <p>Missing Items</p>
+                      <h3 style="color:#ef4444" id="dashTotalMissing">0</h3>
+                    </div>
+                  </div>
+                </div>
+                <div class="dashboard-card neutral">
+                  <div class="dashboard-card-content">
+                    <div class="dashboard-icon success">
+                      <svg class="icon" style="width:32px;height:32px;stroke:white" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    </div>
+                    <div class="dashboard-info">
+                      <p>Cameras Active</p>
+                      <h3 style="color:var(--foreground)" id="dashTotalCameras">9</h3>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Charts -->
+              <div class="charts-grid">
+                <div class="chart-card">
+                  <div class="chart-title"><div class="status-dot"></div><h3>Distribution</h3></div>
+                  <div class="chart-container"><canvas id="pieChart"></canvas></div>
+                </div>
+                <div class="chart-card">
+                  <div class="chart-title"><div class="status-dot"></div><h3>Per Aisle</h3></div>
+                  <div class="chart-container"><canvas id="barChart"></canvas></div>
+                </div>
+              </div>
+
+              <!-- Doc 1 Insight Cards -->
+              <div class="insights-grid">
+                <div class="insight-card primary">
+                  <div class="insight-header">
+                    <svg class="icon" style="width:32px;height:32px;stroke:white;fill:none" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                    <h3>Detection Rate</h3>
+                  </div>
+                  <div class="insight-value">99%</div>
+                  <div class="insight-label">Average accuracy across all cameras</div>
+                </div>
+                <div class="insight-card success">
+                  <div class="insight-header">
+                    <svg class="icon" style="width:32px;height:32px;stroke:white;fill:none" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    <h3>Stock Level</h3>
+                  </div>
+                  <div class="insight-value">95%</div>
+                  <div class="insight-label">Average shelf fullness across aisles</div>
+                </div>
+                <div class="insight-card warning">
+                  <div class="insight-header">
+                    <svg class="icon" style="width:32px;height:32px;stroke:white;fill:none" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <h3>Alerts Today</h3>
+                  </div>
+                  <div class="insight-value" id="dashAlertsToday">0</div>
+                  <div class="insight-label">Items requiring immediate restocking</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ── About Page — mirrors landing page about section exactly ── -->
+          <div class="page" id="about-page">
+            <div class="page-wrapper">
+
+              <!-- Section header -->
+              <div class="lp-section-header" style="margin-bottom:3rem;">
+                <span class="lp-section-badge">About the Project</span>
+                <h2 class="lp-section-title">What is ShelfSense AI?</h2>
+                <p class="lp-section-description">
+                  Revolutionary AI technology designed to solve retail's biggest challenge:
+                  maintaining optimal inventory levels across all store locations.
+                </p>
+              </div>
+
+              <!-- Overview grid: text + image — same as landing -->
+              <div class="lp-overview-grid" style="margin-top:0;margin-bottom:4rem;">
+                <div class="lp-overview-content">
+                  <h3>The Problem We Solve</h3>
+                  <p>
+                    Empty shelves cost retailers billions annually in lost sales and customer frustration.
+                    Traditional manual checks are time-consuming, error-prone, and can't keep pace with
+                    modern retail demands.
+                  </p>
+                  <h3 style="margin-top:2rem">Our Solution</h3>
+                  <p>
+                    ShelfSense AI uses state-of-the-art computer vision algorithms to continuously monitor
+                    your shelves, instantly identifying products and gaps. When stock runs low, the system
+                    automatically alerts your team, enabling rapid response and ensuring shelves stay full.
+                  </p>
+                  <p>
+                    This intelligent solution helps retailers maintain optimal stock levels, reduce
+                    out-of-stock situations by up to 85%, improve operational efficiency, and significantly
+                    enhance customer satisfaction.
+                  </p>
+                </div>
+                <div class="lp-overview-image">
+                  <img src="images/retailabout.webp" alt="AI Retail Technology">
+                </div>
+              </div>
+
+              <!-- Features grid — same as landing -->
+              <div class="lp-section-header" style="margin-bottom:2.5rem;">
+                <span class="lp-section-badge">Key Features</span>
+                <h2 class="lp-section-title">Powerful Capabilities</h2>
+                <p class="lp-section-description">
+                  Everything you need to revolutionize your inventory management and maximize sales
+                </p>
+              </div>
+              <div class="lp-features-grid" style="margin-top:0;margin-bottom:4rem;">
+                <div class="lp-feature-card">
+                  <div class="lp-feature-icon"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+                  <h3>Real-Time Detection</h3>
+                  <p>Continuously monitors shelf inventory with 99% accuracy, identifying products and empty spaces instantly with advanced computer vision technology.</p>
+                </div>
+                <div class="lp-feature-card">
+                  <div class="lp-feature-icon"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+                  <h3>Instant Alerts</h3>
+                  <p>Automatically generates real-time notifications when missing items are detected, enabling your team to respond immediately and minimize out-of-stock time.</p>
+                </div>
+                <div class="lp-feature-card">
+                  <div class="lp-feature-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+                  <h3>Visual Annotations</h3>
+                  <p>Clear visual feedback with AI-generated bounding boxes around detected items, making it easy to understand exactly what's on your shelves at a glance.</p>
+                </div>
+                <div class="lp-feature-card">
+                  <div class="lp-feature-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div>
+                  <h3>Analytics Dashboard</h3>
+                  <p>Comprehensive dashboard with detailed detection statistics, historical trends, and actionable insights across all aisles and store locations.</p>
+                </div>
+              </div>
+
+              <!-- Technology stack — same as landing -->
+              <div style="background:var(--lp-dark);border-radius:24px;padding:4rem 3rem;position:relative;overflow:hidden;margin-bottom:4rem;">
+                <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(circle at 80% 20%,rgba(6,182,212,0.1) 0%,transparent 50%),radial-gradient(circle at 20% 80%,rgba(139,92,246,0.1) 0%,transparent 50%);pointer-events:none;"></div>
+                <div style="position:relative;z-index:1;">
+                  <div class="lp-section-header" style="margin-bottom:3rem;">
+                    <span class="lp-section-badge" style="background:rgba(6,182,212,0.2);border-color:rgba(6,182,212,0.3);">Technology Stack</span>
+                    <h2 class="lp-section-title" style="background:linear-gradient(135deg,white 0%,#06b6d4 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Built with Cutting-Edge Technology</h2>
+                    <p class="lp-section-description" style="color:#cbd5e1;">Powered by industry-leading frameworks and AI models for unmatched performance</p>
+                  </div>
+                  <div class="lp-tech-grid">
+                    <div class="lp-tech-card">
+                      <div class="lp-tech-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+                      <h3>Backend</h3><p class="lp-tech-stack-name">FastAPI + Python</p>
+                    </div>
+                    <div class="lp-tech-card">
+                      <div class="lp-tech-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></div>
+                      <h3>AI Model</h3><p class="lp-tech-stack-name">Roboflow CV API</p>
+                    </div>
+                    <div class="lp-tech-card">
+                      <div class="lp-tech-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg></div>
+                      <h3>Frontend</h3><p class="lp-tech-stack-name">HTML + JavaScript</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Stats strip — same as landing -->
+              <div style="background:linear-gradient(135deg,#06b6d4 0%,#8b5cf6 100%);border-radius:24px;padding:3rem 2rem;margin-bottom:2rem;">
+                <div class="lp-stats-grid">
+                  <div class="lp-stat-card"><span class="lp-stat-number" style="font-size:4rem;">99%</span><span class="lp-stat-label">Detection Accuracy</span></div>
+                  <div class="lp-stat-card"><span class="lp-stat-number" style="font-size:4rem;">50%</span><span class="lp-stat-label">Faster Restocking</span></div>
+                  <div class="lp-stat-card"><span class="lp-stat-number" style="font-size:4rem;">24/7</span><span class="lp-stat-label">Monitoring</span></div>
+                  <div class="lp-stat-card"><span class="lp-stat-number" style="font-size:4rem;">85%</span><span class="lp-stat-label">Efficiency Improvement</span></div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+  </div><!-- /app -->
+
+  <script>
+    /* ─── Landing ─── */
+    function enterApp() {
+      const landing = document.getElementById('landing');
+      const app = document.getElementById('app');
+      landing.classList.add('hide');
+      app.classList.add('show');
+      setTimeout(() => { landing.style.display = 'none'; }, 600);
+    }
+    function goHome() {
+      const landing = document.getElementById('landing');
+      const app = document.getElementById('app');
+      landing.style.display = '';
+      landing.scrollTop = 0;
+      app.classList.remove('show');
+      setTimeout(() => landing.classList.remove('hide'), 50);
+    }
+
+    const lpNavbar = document.getElementById('lpNavbar');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) lpNavbar.classList.add('scrolled');
+      else lpNavbar.classList.remove('scrolled');
+    }, { passive: true });
+
+    const reveals = document.querySelectorAll('.lp-reveal');
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) setTimeout(() => entry.target.classList.add('active'), i * 80);
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+    reveals.forEach(r => revealObserver.observe(r));
+
+    function animateCounter(el) {
+      if (!el.hasAttribute('data-target')) return;
+      const target = parseInt(el.getAttribute('data-target'));
+      if (isNaN(target)) return;
+      const label = el.nextElementSibling?.textContent || '';
+      const suffix = label.includes('Accuracy') || label.includes('Faster') || label.includes('Efficiency') ? '%'
+                   : label.includes('24/7') ? '/7' : '';
+      const duration = 2000, step = target / (duration / 16);
+      let current = 0;
+      const update = () => {
+        current += step;
+        if (current < target) { el.textContent = Math.floor(current); requestAnimationFrame(update); }
+        else { el.textContent = target + suffix; }
+      };
+      update();
+    }
+    let statsAnimated = false;
+    const statsObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !statsAnimated) {
+          document.querySelectorAll('.lp-stat-number[data-target]').forEach(animateCounter);
+          statsAnimated = true;
+        }
+      });
+    }, { threshold: 0.5 });
+    const statsSection = document.querySelector('.lp-stats-section');
+    if (statsSection) statsObserver.observe(statsSection);
+
+    document.addEventListener('click', e => {
+      const target = e.target.closest('a[href^="#"]');
+      if (target && document.getElementById('landing') && !document.getElementById('landing').classList.contains('hide')) {
+        e.preventDefault();
+        const el = document.querySelector(target.getAttribute('href'));
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+
+    /* ─── App Logic (from Doc 2) ─── */
+    const API_URL = '';
+    const SAMPLE_IMAGES = {
+      'cam-1': '/images/testupload1.jpg', 'cam-2': '/images/testupload2.jpg',
+      'cam-3': '/images/testupload3.jpg', 'cam-4': '/images/7.jpg',
+      'cam-5': '/images/8.jpg',          'cam-6': '/images/77.jpg',
+      'cam-7': '/images/2.jpg',          'cam-8': '/images/3.jpg',
+      'cam-9': '/images/4.jpg'
+    };
+    const cameras = [
+      {id:'cam-1',name:'CAM-01',location:'Aisle 1',previewUrl:SAMPLE_IMAGES['cam-1'],hasDetections:false,detectionCount:0,detectionData:null},
+      {id:'cam-2',name:'CAM-02',location:'Aisle 2',previewUrl:SAMPLE_IMAGES['cam-2'],hasDetections:false,detectionCount:0,detectionData:null},
+      {id:'cam-3',name:'CAM-03',location:'Aisle 3',previewUrl:SAMPLE_IMAGES['cam-3'],hasDetections:false,detectionCount:0,detectionData:null},
+      {id:'cam-4',name:'CAM-04',location:'Aisle 4',previewUrl:SAMPLE_IMAGES['cam-4'],hasDetections:false,detectionCount:0,detectionData:null},
+      {id:'cam-5',name:'CAM-05',location:'Aisle 5',previewUrl:SAMPLE_IMAGES['cam-5'],hasDetections:false,detectionCount:0,detectionData:null},
+      {id:'cam-6',name:'CAM-06',location:'Aisle 6',previewUrl:SAMPLE_IMAGES['cam-6'],hasDetections:false,detectionCount:0,detectionData:null},
+      {id:'cam-7',name:'CAM-07',location:'Aisle 7',previewUrl:SAMPLE_IMAGES['cam-7'],hasDetections:false,detectionCount:0,detectionData:null},
+      {id:'cam-8',name:'CAM-08',location:'Aisle 8',previewUrl:SAMPLE_IMAGES['cam-8'],hasDetections:false,detectionCount:0,detectionData:null},
+      {id:'cam-9',name:'CAM-09',location:'Aisle 9',previewUrl:SAMPLE_IMAGES['cam-9'],hasDetections:false,detectionCount:0,detectionData:null}
+    ];
+    let analyzingCameras = new Set(), pieChart = null, barChart = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initNavigation(); initTheme(); initClock(); initMenuToggle(); renderCameraGrid();
+    });
+
+    function initNavigation() {
+      document.querySelectorAll('.nav-link').forEach(l => l.addEventListener('click', e => {
+        e.preventDefault(); navigateTo(l.dataset.page);
+      }));
+    }
+    function navigateTo(page) {
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+      document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(`${page}-page`)?.classList.add('active');
+      if (page === 'dashboard') setTimeout(updateDashboard, 100);
+    }
+    function initTheme() {
+      const btn = document.getElementById('themeToggle'), txt = document.getElementById('themeText');
+      btn?.addEventListener('click', () => {
+        document.body.classList.toggle('dark');
+        txt.textContent = document.body.classList.contains('dark') ? 'Light Mode' : 'Dark Mode';
+        if (document.getElementById('dashboard-page').classList.contains('active')) updateDashboard();
+      });
+    }
+    function initClock() {
+      const el = document.getElementById('headerTime');
+      const update = () => {
+        const n = new Date();
+        el.textContent = `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}`;
+      };
+      update(); setInterval(update, 1000);
+    }
+    function initMenuToggle() {
+      document.getElementById('menuBtn')?.addEventListener('click', () => document.getElementById('sidebar')?.classList.toggle('hidden'));
+    }
+
+    /* CCTV clock ticker */
+    let _cctvClock = null;
+    function startCctvClock() {
+      if (_cctvClock) clearInterval(_cctvClock);
+      _cctvClock = setInterval(() => {
+        const n = new Date();
+        const ts = `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}`;
+        const dt = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+        document.querySelectorAll('.camera-time').forEach(el => el.textContent = ts);
+        document.querySelectorAll('.camera-date').forEach(el => el.textContent = dt);
+      }, 1000);
+    }
+
+    /* Render camera grid — Doc 1 card style */
+    function renderCameraGrid() {
+      const grid = document.getElementById('cameraGrid'); if (!grid) return; grid.innerHTML = '';
+      const now = new Date();
+      const ts = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+      const dt = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+
+      cameras.forEach((cam) => {
+        const card = document.createElement('div');
+        card.className = 'camera-card';
+        const analyzing = analyzingCameras.has(cam.id);
+        const missingCount = cam.detectionData?.summary?.total_missing_detected || 0;
+        const productCount = cam.detectionData?.summary?.total_products_detected || 0;
+
+        card.innerHTML = `
+          <img src="${cam.previewUrl}" alt="${cam.location}" class="camera-image">
+          <div class="camera-vignette"></div>
+          <div class="camera-scanline"></div>
+          <div class="camera-hover"></div>
+          <div class="camera-corners">
+            <div class="camera-corner tl"></div>
+            <div class="camera-corner tr"></div>
+            <div class="camera-corner bl"></div>
+            <div class="camera-corner br"></div>
+          </div>
+          <div class="camera-hud-tl">
+            <div class="camera-time">${ts}</div>
+            <div class="camera-date">${dt}</div>
+          </div>
+          <div class="camera-hud-tr">
+            <div class="camera-rec-dot"></div>
+            <span class="camera-rec-text">REC</span>
+          </div>
+          <div class="camera-label">${cam.name}</div>
+          ${cam.hasDetections ? `<div class="camera-detections">${cam.detectionCount} OBJ</div>` : ''}
+          <div class="camera-hud-bl">
+            <span class="camera-location">${cam.location.toUpperCase()}</span>
+            ${missingCount > 0
+              ? `<span class="camera-status-alert">⚠ RESTOCK</span>`
+              : cam.hasDetections
+                ? `<span class="camera-status-ok">● NORMAL</span>`
+                : `<span style="font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:0.1em;font-family:'Courier New',monospace;">STANDBY</span>`}
+          </div>
+          <!-- Doc 1 hover info overlay -->
+          <div class="camera-info-overlay">
+            <div class="camera-info-title">${cam.location}</div>
+            <div class="camera-info-badges">
+              <div class="camera-info-badge">
+                <svg style="width:16px;height:16px;stroke:white;fill:none;stroke-width:2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                <span>${cam.hasDetections ? productCount + ' Products' : 'Click to Analyze'}</span>
+              </div>
+              ${missingCount > 0 ? `
+              <div class="camera-info-badge alert">
+                <svg style="width:16px;height:16px;stroke:white;fill:none;stroke-width:2" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span>${missingCount} Missing</span>
+              </div>` : ''}
+            </div>
+            <div class="camera-info-text">${cam.hasDetections ? 'Click to view detailed analysis' : 'Click to run AI detection'}</div>
+          </div>
+          ${analyzing ? `<div class="analyzing-overlay"><div class="spinner"></div><p class="analyzing-text">ANALYZING...</p></div>` : ''}
+        `;
+
+        if (!analyzing) card.addEventListener('click', () => handleCameraClick(cam.id));
+        grid.appendChild(card);
+      });
+
+      startCctvClock();
+    }
+
+    async function handleCameraClick(cameraId) {
+      const camera = cameras.find(c => c.id === cameraId); if (!camera?.previewUrl) return;
+      if (camera.hasDetections) { showInspectView(cameraId); return; }
+      analyzingCameras.add(cameraId); renderCameraGrid();
+      try {
+        const imgRes = await fetch(camera.previewUrl); if (!imgRes.ok) throw new Error(`Cannot fetch image: ${imgRes.status}`);
+        const blob = await imgRes.blob(); const fd = new FormData(); fd.append('file', blob, `${cameraId}.jpg`);
+        const res = await fetch(`${API_URL}/analyze-image`, {method:'POST', body:fd});
+        if (!res.ok) { const txt = await res.text(); throw new Error(`Backend ${res.status}: ${txt}`); }
+        const data = await res.json();
+        if (!data?.summary || typeof data.details === 'undefined') throw new Error('Backend response missing data');
+        camera.hasDetections = true;
+        camera.detectionCount = (data.summary.total_products_detected||0) + (data.summary.total_missing_detected||0);
+        camera.detectionData = data;
+        showInspectView(cameraId);
+      } catch(err) { console.error('Analysis failed:', err); alert(`Analysis failed:\n${err.message}`); }
+      finally { analyzingCameras.delete(cameraId); renderCameraGrid(); }
+    }
+
+    function showInspectView(cameraId) {
+      const camera = cameras.find(c => c.id === cameraId); if (!camera?.detectionData) return;
+      document.getElementById('inspectCameraName').textContent = `${camera.name} — ${camera.location}`;
+      const data = camera.detectionData, details = Array.isArray(data.details) ? data.details : [];
+      const products = Number(data.summary?.total_products_detected)||0, missing = Number(data.summary?.total_missing_detected)||0;
+      document.getElementById('inspectTotal').textContent = details.length;
+      document.getElementById('inspectProducts').textContent = products;
+      document.getElementById('inspectMissing').textContent = missing;
+      const card = document.getElementById('inspectStatusCard'), icon = document.getElementById('inspectStatusIcon'),
+            title = document.getElementById('inspectStatusTitle'), msg = document.getElementById('inspectStatusMessage');
+      if (missing > 0) {
+        card.className = 'status-card warning';
+        icon.innerHTML = `<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>`;
+        icon.style.color='var(--warning)'; title.textContent='RESTOCK NEEDED'; title.style.color='var(--warning)';
+        msg.textContent=`${missing} empty spot${missing>1?'s':''} detected`;
+      } else {
+        card.className = 'status-card success';
+        icon.innerHTML = `<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>`;
+        icon.style.color='var(--success)'; title.textContent='ALL GOOD'; title.style.color='var(--success)'; msg.textContent='Shelf fully stocked';
+      }
+      const canvas = document.getElementById('inspectCanvas');
+      if (canvas) drawAnnotations(canvas, camera.previewUrl, details);
+      navigateTo('inspect');
+    }
+
+    function drawAnnotations(canvasEl, imageUrl, detections) {
+      const ctx = canvasEl.getContext('2d'); const img = new Image(); img.crossOrigin = 'anonymous';
+      img.onerror = () => { ctx.fillStyle='#333'; ctx.fillRect(0,0,canvasEl.width,canvasEl.height); };
+      img.onload = () => {
+        canvasEl.width = img.width; canvasEl.height = img.height; ctx.drawImage(img,0,0);
+        if (!detections || !Array.isArray(detections) || detections.length === 0) return;
+        detections.forEach(det => {
+          if (!det || typeof det.x !== 'number') return;
+          const x=det.x-(det.width/2), y=det.y-(det.height/2), w=det.width||50, h=det.height||50;
+          const isProd = String(det.class||'').toLowerCase() === 'product';
+          ctx.strokeStyle = isProd ? '#22d3ee' : '#ef4444';
+          ctx.fillStyle   = isProd ? 'rgba(34,211,238,0.18)' : 'rgba(239,68,68,0.18)';
+          ctx.lineWidth = 3; ctx.fillRect(x,y,w,h); ctx.strokeRect(x,y,w,h);
+          const label = `${det.class||'object'} ${((det.confidence||0)*100).toFixed(1)}%`;
+          ctx.font = 'bold 15px Arial'; const tw = ctx.measureText(label).width;
+          ctx.fillStyle = isProd ? '#22d3ee' : '#ef4444'; ctx.fillRect(x,y-26,tw+12,26);
+          ctx.fillStyle = '#fff'; ctx.fillText(label, x+6, y-8);
+        });
+      };
+      img.src = imageUrl;
+    }
+
+    function updateDashboard() {
+      let totalProducts=0, totalMissing=0; const labels=[], products=[], missing=[];
+      cameras.forEach(cam => {
+        if (cam.detectionData) {
+          totalProducts += cam.detectionData.summary.total_products_detected;
+          totalMissing  += cam.detectionData.summary.total_missing_detected;
+          labels.push(cam.name);
+          products.push(cam.detectionData.summary.total_products_detected);
+          missing.push(cam.detectionData.summary.total_missing_detected);
+        }
+      });
+      document.getElementById('dashTotalProducts').textContent = totalProducts;
+      document.getElementById('dashTotalMissing').textContent  = totalMissing;
+      document.getElementById('dashTotalCameras').textContent  = cameras.length;
+      document.getElementById('dashAlertsToday').textContent   = totalMissing;
+      createCharts(totalProducts, totalMissing, labels, products, missing);
+    }
+
+    function createCharts(tp, tm, labels, products, missing) {
+      const isDark = document.body.classList.contains('dark');
+      const labelColor = isDark ? '#f1f5f9' : '#1e293b';
+      const tickColor  = isDark ? '#cbd5e1' : '#475569';
+      const gridColor  = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
+      Chart.defaults.color = labelColor;
+
+      if (pieChart) pieChart.destroy();
+      pieChart = new Chart(document.getElementById('pieChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Products','Missing'],
+          datasets: [{
+            data: [tp, tm],
+            backgroundColor: ['rgba(6,182,212,0.85)','rgba(239,68,68,0.85)'],
+            borderColor: ['#06b6d4','#ef4444'],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { color: labelColor, font: { family: 'Inter,sans-serif', size: 13, weight: '600' }, padding: 20, usePointStyle: true }
+            }
+          }
+        }
+      });
+
+      if (barChart) barChart.destroy();
+      barChart = new Chart(document.getElementById('barChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            { label:'Products', data:products, backgroundColor:'rgba(6,182,212,0.7)', borderColor:'#06b6d4', borderWidth:2, borderRadius:8 },
+            { label:'Missing',  data:missing,  backgroundColor:'rgba(239,68,68,0.7)',  borderColor:'#ef4444', borderWidth:2, borderRadius:8 }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          scales: {
+            x: { grid:{display:false}, ticks:{color:tickColor, font:{size:12}} },
+            y: { grid:{color:gridColor}, ticks:{color:tickColor, font:{size:12}} }
+          },
+          plugins: {
+            legend: {
+              labels: { color:labelColor, font:{size:13,weight:'600'}, usePointStyle:true, padding:16 }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
